@@ -1,0 +1,16 @@
+# Pinned for reproducibility. Versions chosen for stable wheels on
+# Windows + macOS + Linux without requiring a CUDA toolchain.
+
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+
+# Model + tensor stack. sentence-transformers depends on torch + transformers.
+# CPU-only torch wheels are sufficient for bge-small (encodes 100+ short docs/s
+# on a recent laptop CPU). If you have CUDA, install the matching torch wheel
+# from https://pytorch.org/get-started/locally/ before this requirements file.
+sentence-transformers==3.1.1
+torch==2.4.1
+transformers==4.45.2
+numpy==1.26.4

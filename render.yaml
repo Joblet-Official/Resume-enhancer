@@ -1,0 +1,35 @@
+# Render Blueprint — ApplyBoost / Resume-enhancer embedding micro-service.
+#
+# Standalone FastAPI service (main.py) running
+# sentence-transformers/all-MiniLM-L6-v2 (384-dim) behind POST /v1/embed.
+# The Joblet app calls it over HTTP via APPLYBOOST_EMBEDDING_URL — the two are
+# decoupled, so this lives in its own repo.
+#
+# Deploy: either create a Blueprint from this repo, or a Web Service via the
+# dashboard with the same build/start commands and env vars below.
+services:
+  - type: web
+    name: resume-enhancer-embed
+    runtime: python
+    # 'free' (512MB) is tight for torch and may OOM on boot — switch to 'starter'
+    # if that happens. Free also spins down when idle (~30-60s cold start); the
+    # app's 45s timeout + score fallback absorb that.
+    plan: free
+    # CPU-only torch keeps the slug small and skips the CUDA download.
+    buildCommand: >-
+      pip install --upgrade pip &&
+      pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu &&
+      pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      # torch 2.4.1 has no Python 3.13 wheels — pin 3.11.
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: EMBED_MODEL_NAME
+        value: sentence-transformers/all-MiniLM-L6-v2
+      # Render generates a random secret. Copy its value into the Vercel project
+      # as APPLYBOOST_EMBEDDING_API_KEY so the app authenticates to this service.
+      - key: EMBED_AUTH_TOKEN
+        generateValue: true
