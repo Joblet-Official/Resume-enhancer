@@ -18,7 +18,7 @@ services:
     # CPU-only torch keeps the slug small and skips the CUDA download.
     buildCommand: >-
       pip install --upgrade pip &&
-      pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu &&
+      pip install torch==2.9.0 --index-url https://download.pytorch.org/whl/cpu &&
       pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -26,7 +26,7 @@ services:
     envVars:
       # torch 2.4.1 has no Python 3.13 wheels — pin 3.11.
       - key: PYTHON_VERSION
-        value: "3.11.9"
+        value: "3.11.10"
       - key: EMBED_MODEL_NAME
         value: sentence-transformers/all-MiniLM-L6-v2
       # Render generates a random secret. Copy its value into the Vercel project
