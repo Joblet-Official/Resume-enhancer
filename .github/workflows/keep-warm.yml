@@ -1,0 +1,32 @@
+# Keeps the Render free-tier embedding service warm.
+#
+# Render free web services spin down after ~15 min of inactivity, and the next
+# request then pays a 30-60s cold start while torch + the model reload. This
+# workflow pings the unauthenticated /health endpoint on a schedule so the
+# instance never goes idle long enough to spin down.
+#
+# Setup: set a repo variable named SERVICE_URL to your Render base URL
+# (Settings -> Secrets and variables -> Actions -> Variables). If unset, it
+# falls back to the default below — edit it to match your service.
+name: keep-warm
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub's scheduler can lag under load, so 10 min keeps
+    # a safety margin under Render's ~15 min spin-down window.
+    - cron: "*/10 * * * *"
+  # Allow manual runs from the Actions tab for testing.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: |
+          BASE="${{ vars.SERVICE_URL || 'https://resume-enhancer-ud2p.onrender.com' }}"
+          echo "Pinging $BASE/health"
+          code=$(curl -fsS -m 90 -o /dev/null -w "%{http_code}" "$BASE/health") || {
+            echo "Ping failed (curl exit $?)"; exit 1;
+          }
+          echo "HTTP $code"
