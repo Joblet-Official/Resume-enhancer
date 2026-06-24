@@ -14,7 +14,7 @@ on:
   schedule:
     # Every 10 minutes. GitHub's scheduler can lag under load, so 10 min keeps
     # a safety margin under Render's ~15 min spin-down window.
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   # Allow manual runs from the Actions tab for testing.
   workflow_dispatch:
 
