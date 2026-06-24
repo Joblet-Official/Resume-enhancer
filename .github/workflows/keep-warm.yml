@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Ping /health
         run: |
-          BASE="${{ vars.SERVICE_URL || 'https://resume-enhancer-embed.onrender.com' }}"
+          BASE="${{ vars.SERVICE_URL || 'https://resume-enhancer-ud2p.onrender.com' }}"
           echo "Pinging $BASE/health"
           code=$(curl -fsS -m 90 -o /dev/null -w "%{http_code}" "$BASE/health") || {
             echo "Ping failed (curl exit $?)"; exit 1;
