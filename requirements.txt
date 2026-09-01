@@ -15,3 +15,4 @@ sentence-transformers==3.1.1
 torch==2.9.0+cpu
 transformers==4.45.2
 numpy==1.26.4
+uvicorn main:app --host 127.0.0.1 --port 8001

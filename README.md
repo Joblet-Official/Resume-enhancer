@@ -47,9 +47,18 @@ OOMs. Free also spins down when idle, so the first request after a lull takes
 
 ## Wire into the Joblet app (Vercel env)
 
+> **Update (1 Sep 2026): ApplyBoost now uses the SAME model as job search — BGE
+> (`BAAI/bge-small-en-v1.5`).** ApplyBoost compares resume-vs-JD vectors in-memory
+> and always embeds in `document` mode, so BGE's query prefix never applies and it
+> can share the jobs BGE service. Point `APPLYBOOST_EMBEDDING_URL/TOKEN` at the
+> same BGE deployment the jobs app uses (`LOCAL_EMBED_URL/TOKEN`), or run a second
+> BGE instance to isolate load. If you deploy this service specifically for
+> ApplyBoost, set `EMBED_MODEL_NAME=BAAI/bge-small-en-v1.5` (not MiniLM).
+
 ```
-APPLYBOOST_EMBEDDING_URL=https://<this-service>.onrender.com
+APPLYBOOST_EMBEDDING_URL=https://<bge-service>            # same as LOCAL_EMBED_URL is fine
 APPLYBOOST_EMBEDDING_API_KEY=<the EMBED_AUTH_TOKEN value>
-APPLYBOOST_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-APPLYBOOST_EMBEDDING_COSINE_THRESHOLD=0.5   # calibrate post-deploy, see joblet1.0/scripts/calibrate-ats-threshold.mjs
+APPLYBOOST_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+# ⚠️ Recalibrate for BGE (scores run higher than MiniLM's — 0.5 was tuned for MiniLM):
+APPLYBOOST_EMBEDDING_COSINE_THRESHOLD=0.5   # run joblet1.0/scripts/calibrate-ats-threshold.mjs
 ```

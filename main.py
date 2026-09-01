@@ -48,6 +48,7 @@ First start downloads the model (~130 MB) into the HuggingFace cache.
 Environment
 -----------
     EMBED_MODEL_NAME      default "BAAI/bge-small-en-v1.5"
+    EMBED_MODEL_REVISION  pinned Hugging Face commit for reproducibility
     EMBED_BATCH_SIZE      default 32   (per encode() call; the API can accept
                                        larger lists — the service slices them)
     EMBED_NORMALIZE       "1" (default) — return unit-norm vectors so the
@@ -71,12 +72,16 @@ import torch
 
 
 MODEL_NAME = os.environ.get("EMBED_MODEL_NAME", "BAAI/bge-small-en-v1.5")
+DEFAULT_BGE_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+MODEL_REVISION = os.environ.get("EMBED_MODEL_REVISION") or (
+    DEFAULT_BGE_REVISION if MODEL_NAME == "BAAI/bge-small-en-v1.5" else None
+)
 BATCH_SIZE = int(os.environ.get("EMBED_BATCH_SIZE", "32"))
 NORMALIZE = os.environ.get("EMBED_NORMALIZE", "1") not in ("0", "false", "False")
 
 # Optional auth. If EMBED_AUTH_TOKEN is set, /v1/embed requires
 # `Authorization: Bearer <token>`. Leave unset for an open service (fine for
-# local dev or a private network). Set it for a public Render URL so the
+# local dev or a private network). Set it for any public deployment so the
 # endpoint can't be hammered by anyone who finds it.
 AUTH_TOKEN = os.environ.get("EMBED_AUTH_TOKEN", "").strip()
 
@@ -103,9 +108,15 @@ DEVICE = pick_device()
 
 # ---- Model load -----------------------------------------------------------
 
-print(f"[embed-service] loading model={MODEL_NAME!r} device={DEVICE!r}")
+print(
+    f"[embed-service] loading model={MODEL_NAME!r} revision={MODEL_REVISION!r} "
+    f"device={DEVICE!r}"
+)
 t0 = time.time()
-model = SentenceTransformer(MODEL_NAME, device=DEVICE)
+model_kwargs = {"device": DEVICE, "trust_remote_code": False}
+if MODEL_REVISION:
+    model_kwargs["revision"] = MODEL_REVISION
+model = SentenceTransformer(MODEL_NAME, **model_kwargs)
 DIMENSIONS = int(model.get_sentence_embedding_dimension())
 print(f"[embed-service] ready in {time.time() - t0:.1f}s — dimensions={DIMENSIONS}")
 
@@ -156,6 +167,7 @@ def health() -> dict:
     return {
         "ok": True,
         "model": MODEL_NAME,
+        "model_revision": MODEL_REVISION,
         "device": DEVICE,
         "dimensions": DIMENSIONS,
         "normalize": NORMALIZE,
